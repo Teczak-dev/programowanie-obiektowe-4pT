@@ -2,6 +2,7 @@ import random
 import os
 from itertools import count
 from operator import indexOf
+from platform import system
 
 """
     zasady gry w kosci :>
@@ -19,7 +20,7 @@ liczba_graczy = 2
 cel_punktow = 5000
 punkty_graczy = list()# bedzie przechowywac punkty graczy
 
-
+# start calej gry
 def menu_glowne():
     wiadomosc = ""
     while True:
@@ -31,14 +32,13 @@ def menu_glowne():
         os.system("cls")
         if menuSel == 1:
             start()
-            menuSel = 0
         elif menuSel == 2:
             ustawienia()
         elif menuSel == 3:
             break
         else: wiadomosc = "Podano błędną liczbę"
 
-
+# odpowiada za ustawianie ilosci graczy i ilosci punktow do wygrania
 def ustawienia():
     global liczba_graczy, cel_punktow
     while True:
@@ -48,6 +48,7 @@ def ustawienia():
         print("-------------------------------")
         print("1 - zmiana liczby graczy\n2 - zmiana ilosci punktow do wygranej\n3 - wyjscie")
         wybor = int(input(": "))
+        os.system("cls")
         if wybor == 1:
             while True:#petla do wprowadzenia odpowiedniej liczby graczy
                 print("Wprowadz liczbe graczy(2-4)")
@@ -67,36 +68,38 @@ def ustawienia():
         elif wybor == 3:
             break
 
-
+# odpowiada za wykrycie wygranej, odpowiada za dawanie tury na przemian graczom
 def start():
-    global punkty_graczy
-    wygrany = 0
+    global punkty_graczy,cel_punktow
+    wygrany = -1
     punkty_graczy = [0 for i in range(0, liczba_graczy)]
-    while wygrany == 0 :
+    while wygrany == -1 :
         for i in range(0,liczba_graczy):
-            if wygrany != 0: return
-            print("Runda gracza ",i+1," ma ",punkty_graczy[i]," punktow")
+            if wygrany != -1:
+                break
+            os.system("cls")
+            print("Runda gracza ",i+1," ma ",punkty_graczy[i],"/",cel_punktow,"punktow")
             instrukcja()
-            rozgrywka(i)
-        for i in range(0,liczba_graczy):
+            rozgrywka(i,6)
             if punkty_graczy[i] >= cel_punktow:
                 wygrany = i
                 break
-    print("Wygrał gracz",wygrany)
+    os.system("cls")
+    print("****************************\nWygrał gracz",wygrany+1,"\n****************************")
 
 
 
 
 
-
-def rozgrywka(id):
-    punkty = rzut()
+# funkcja zwraca liczbe punktow trwa tak dlugo jak uzytkownik chce lub gdy z rzuconych kosci uzyska 0 punktow
+def rozgrywka(id,diceF):
+    punkty = rzut(diceF)
 
     print("Gracz",id+1,"zdobyte punkty:",punkty,"| posiadane punkty(bezpieczne):",punkty_graczy[id])
 
     if punkty == 0: return
     else: punkty_graczy[id] += punkty
-    if punkty >= cel_punktow: return
+    if punkty_graczy[id] >= cel_punktow: return
 
     while True:
         print("chcesz grac dalej?(t/n)")
@@ -110,12 +113,13 @@ def rozgrywka(id):
         dice = int(input(": "))
         if dice >= 1 and dice <= 6:
             break
-    rozgrywka(id)
+    rozgrywka(id, dice)
     return
 
-def rzut():
+# funkcja odpowiada za wylosowanie kosci, podliczenie punktow, wypisaniu kosci i zwroceniu ilosci uzyskanych punktow
+def rzut(maxKosci):
     punkty = 0
-    kosci = [random.randint(1, 6) for i in range(0, 6)]  # rzut 6sciu kosci
+    kosci = [random.randint(1, 6) for i in range(0, maxKosci)]  # rzut 6sciu kosci przy pierszej turze, nastepnie wedlug ilosci podanej przez gracza
     for i in kosci:  # dodawanie punktow na bazie jednego oczka
         if i == 1:
             punkty += 100
@@ -127,8 +131,11 @@ def rzut():
                 punkty += 1000
             else:
                 punkty += i * 100
+    for x in range(0,maxKosci):
+        print(f"Kość {x+1} : {kosci[x]}")
     return punkty
 
+#Funkcja wypoisuje zasady gry dla kazdego z graczy
 def instrukcja():
     print("***** Informacje pomocnicze: \n zasady gry w kosci :> \n"
           "gracz rzucza tak dlugo dopuki nie uzyska 0 punktow z rzutu\n"
